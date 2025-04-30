@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace DinoGame
@@ -22,39 +23,43 @@ namespace DinoGame
         private int score;
 
         private readonly Dinosaur dinosaur;
-        private bool dinosaurControllable;
-        private bool dinosaurAlive;
-        private int jumpProgress;
-        private static readonly int jumpLength = 20;
-        private static readonly int jumpHeight = 10;
-
         private readonly UI ui;
+        private List<Cactus> cacti;
 
         public Game()
         {
             score = 0;
-            dinosaurAlive = true;
-            dinosaurControllable = true;
-            jumpProgress = 0;
 
             ui = new UI(3 * Console.WindowHeight / 4);
-            dinosaur = new Dinosaur();
+            dinosaur = new Dinosaur(ui);
+            cacti = new List<Cactus>() { new Cactus(ui, -10), new Cactus(ui, -100), new Cactus(ui, -200), new Cactus(ui, -300) };
         }
 
         public void Start()
         {
             ui.Skeleton();
             ui.UpdateScore(0);
-            dinosaur.Display(ui);
-
-            new Cactus(20).Display(ui);
+            dinosaur.Display();
 
             Thread userInputThread = new Thread(AcceptUserInput);
             userInputThread.Start();
 
-            while (dinosaurAlive)
+            while (dinosaur.Alive)
             {
-                HandleJumping();
+                dinosaur.Step();
+
+                foreach (Cactus cactus in cacti)
+                {
+                    if (Console.WindowWidth - cactus.DistanceFromRight < -20) cactus.DistanceFromRight = -100;
+
+                    cactus.Step();
+
+                    if (cactus.GetRightmostLeft() == Console.WindowWidth / 4 - 1)
+                    {
+                        score++;
+                        ui.UpdateScore(score);
+                    }
+                }
 
                 Thread.Sleep(10);
             }
@@ -62,35 +67,12 @@ namespace DinoGame
 
         private void AcceptUserInput()
         {
-            while (dinosaurAlive)
+            while (dinosaur.Alive)
             {
                 Console.ReadKey();
 
-                if (dinosaurControllable)
-                {
-                    jumpProgress = 1;
-                    dinosaurControllable = false;
-                }
+                dinosaur.Jump();
             }
-        }
-
-        private void HandleJumping()
-        {
-            if (jumpProgress > 0)
-            {
-                dinosaur.CleanUp(ui);
-                dinosaur.UpdateJumpHeight(CalculateJumpHeight());
-                dinosaur.Display(ui);
-
-                jumpProgress += 1;
-
-                if (jumpProgress > jumpLength) { jumpProgress = 0; dinosaurControllable = true; }
-            }
-        }
-
-        private int CalculateJumpHeight()
-        {
-            return (int)Math.Floor(-4 * jumpHeight / Math.Pow(jumpLength, 2) * jumpProgress * (jumpProgress - jumpLength));
         }
     }
 
@@ -146,89 +128,6 @@ namespace DinoGame
             Console.CursorLeft += "SCORE: ".Length;
 
             Console.Write(score);
-        }
-    }
-
-    class Dinosaur
-    {
-        private static readonly string[] displayText = new string[]
-            {
-                "               __",
-                "              / _)",
-                "     _.----._/ /",
-                "    /         /",
-                " __/ (  | (  |",
-                "/__.-'|_|--|_|"
-            };
-
-        private int jumpHeight;
-
-        public Dinosaur() { jumpHeight = 0; }
-
-        public void UpdateJumpHeight(int jumpHeight) { this.jumpHeight = jumpHeight; }
-
-        public void Display(UI ui)
-        {
-            for (int i = 0; i < displayText.Length; i++)
-            {
-                Console.SetCursorPosition(Console.WindowWidth / 4, ui.Horizon - 1 - i - jumpHeight);
-
-                foreach (char c in displayText[displayText.Length - i - 1])
-                {
-                    if (c == ' ') Console.CursorLeft++;
-                    else Console.Write(c);
-                }
-            }
-        }
-
-        public void CleanUp(UI ui)
-        {
-            for (int i = 0; i < displayText.Length; i++)
-            {
-                Console.SetCursorPosition(Console.WindowWidth / 4, ui.Horizon - 1 - i - jumpHeight);
-
-                foreach (char c in displayText[displayText.Length - i - 1])
-                {
-                    if (c == ' ') Console.CursorLeft++;
-                    else Console.Write(' ');
-                }
-            }
-        }
-    }
-
-    class Cactus
-    {
-        private static readonly string[] displayText = new string[]
-        {
-            "    ,*-.",
-            "    |  |",
-            ",.  |  |",
-            "| |_|  | ,.",
-            "`---.  |_| |",
-            "    |  .--`",
-            "    |  |",
-            "    |  |"
-        };
-
-        private int distanceFromRight;
-
-        public Cactus(int distanceFromRight)
-        {
-            this.distanceFromRight = distanceFromRight;
-        }
-
-        public void Display(UI ui)
-        {
-            for (int i = 0; i < displayText.Length; i++)
-            {
-                Console.SetCursorPosition(Console.WindowWidth - distanceFromRight, ui.Horizon - 1 - i);
-
-                foreach (char c in displayText[displayText.Length - i - 1])
-                {
-                    if (c == ' ') Console.CursorLeft++;
-                    else Console.Write(c);
-                }
-            }
         }
     }
 }
