@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Threading;
+using System.Collections.Generic;
 
 namespace DinoGame
 {
-    class Dinosaur
+    class Dinosaur : ICollidable
     {
         private readonly UI ui;
 
@@ -17,13 +17,14 @@ namespace DinoGame
                 "/__.-'|_|--|_|"
             };
 
-        public bool Alive { get; } = true;
+        public bool Alive { get; set; } = true;
 
         private int jumpProgress = 0;
         private const int JUMP_LENGTH = 40;
         private const int JUMP_HEIGHT = 15;
 
         private int currentHeight = 0;
+        private static readonly int defaultLeft = Console.WindowWidth / 4;
 
 
         public Dinosaur(UI ui) { this.ui = ui; }
@@ -48,6 +49,26 @@ namespace DinoGame
             if (jumpProgress > JUMP_LENGTH) jumpProgress = 0;
         }
 
+        public List<(int left, int top)> GenerateHitBox()
+        {
+            List<(int left, int top)> hitBox = new List<(int left, int top)>();
+
+            for (int i = 0; i < displayText.Length; i++)
+            {
+                int left = defaultLeft;
+                int top = ui.Horizon - 1 - i - currentHeight;
+
+                foreach (char c in displayText[displayText.Length - i - 1])
+                {
+                    if (c != ' ') hitBox.Add((left, top));
+
+                    left++;
+                }
+            }
+
+            return hitBox;
+        }
+
         private int CalculateJumpHeight()
         {
             return (int)Math.Floor(-4 * JUMP_HEIGHT / Math.Pow(JUMP_LENGTH, 2) * jumpProgress * (jumpProgress - JUMP_LENGTH));
@@ -57,7 +78,7 @@ namespace DinoGame
         {
             for (int i = 0; i < displayText.Length; i++)
             {
-                Console.SetCursorPosition(Console.WindowWidth / 4, ui.Horizon - 1 - i - currentHeight);
+                Console.SetCursorPosition(defaultLeft, ui.Horizon - 1 - i - currentHeight);
 
                 foreach (char c in displayText[displayText.Length - i - 1])
                 {
@@ -71,7 +92,7 @@ namespace DinoGame
         {
             for (int i = 0; i < displayText.Length; i++)
             {
-                Console.SetCursorPosition(Console.WindowWidth / 4, ui.Horizon - 1 - i - currentHeight);
+                Console.SetCursorPosition(defaultLeft, ui.Horizon - 1 - i - currentHeight);
 
                 foreach (char c in displayText[displayText.Length - i - 1])
                 {

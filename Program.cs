@@ -4,6 +4,12 @@ using System.Threading;
 
 namespace DinoGame
 {
+    public interface ICollidable
+    {
+        List<(int left, int top)> GenerateHitBox();
+    }
+
+
     internal class Program
     {
         static void Main(string[] args)
@@ -15,6 +21,32 @@ namespace DinoGame
             game.Start();
 
             Console.ReadKey();
+        }
+    }
+
+    class CollisionSystem
+    {
+        public static int CheckCollisions(ICollidable first, ICollidable second)
+        {
+            int collisions = 0;
+
+            foreach ((int, int) coordinate in first.GenerateHitBox())
+            {
+                foreach ((int, int) otherCoordinate in second.GenerateHitBox())
+                {
+                    if (coordinate == otherCoordinate)
+                    {
+                        Console.SetCursorPosition(coordinate.Item1, coordinate.Item2);
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        Console.Write('*');
+                        Console.ResetColor();
+
+                        collisions++;
+                    }
+                }
+            }
+
+            return collisions;
         }
     }
 
@@ -32,7 +64,7 @@ namespace DinoGame
 
             ui = new UI(3 * Console.WindowHeight / 4);
             dinosaur = new Dinosaur(ui);
-            cacti = new List<Cactus>() { new Cactus(ui, -10), new Cactus(ui, -100), new Cactus(ui, -200), new Cactus(ui, -300) };
+            cacti = new List<Cactus>() { new Cactus(ui, -10), new Cactus(ui, -100), new Cactus(ui, -200), new Cactus(ui, -300), new Cactus(ui, -400), new Cactus(ui, -500) };
         }
 
         public void Start()
@@ -52,7 +84,13 @@ namespace DinoGame
                 {
                     if (Console.WindowWidth - cactus.DistanceFromRight < -20) cactus.DistanceFromRight = -100;
 
-                    cactus.Step();
+                    cactus.Step(score);
+
+                    if (CollisionSystem.CheckCollisions(dinosaur, cactus) > 0)
+                    {
+                        dinosaur.Alive = false;
+                        break;
+                    }
 
                     if (cactus.GetRightmostLeft() == Console.WindowWidth / 4 - 1)
                     {
@@ -61,7 +99,7 @@ namespace DinoGame
                     }
                 }
 
-                Thread.Sleep(10);
+                Thread.Sleep(5);
             }
         }
 
@@ -96,6 +134,8 @@ namespace DinoGame
 
         private void DisplayGround()
         {
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+
             for (int top = Horizon; top < Console.WindowHeight; top++)
             {
                 for (int left = 0; left < Console.WindowWidth; left++)
@@ -104,6 +144,8 @@ namespace DinoGame
                     Console.Write('█');
                 }
             }
+
+            Console.ResetColor();
 
             Console.CursorTop = 0;
         }
@@ -119,11 +161,6 @@ namespace DinoGame
 
         public void UpdateScore(int score)
         {
-            Console.SetCursorPosition(3, 1);
-            Console.CursorLeft += "SCORE: ".Length;
-
-            Console.Write(new string(' ', Console.WindowWidth - Console.CursorLeft));
-
             Console.SetCursorPosition(3, 1);
             Console.CursorLeft += "SCORE: ".Length;
 
