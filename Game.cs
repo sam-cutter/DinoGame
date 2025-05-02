@@ -18,7 +18,9 @@ namespace DinoGame
 
             ui = new UI(3 * Console.WindowHeight / 4);
             dinosaur = new Dinosaur(ui);
-            cacti = new List<Cactus>() { new Cactus(ui, -10), new Cactus(ui, -100), new Cactus(ui, -200), new Cactus(ui, -300), new Cactus(ui, -400), new Cactus(ui, -500) };
+            cacti = new List<Cactus>();
+
+            for (int i = 0; i < 5; i++) cacti.Add(new Cactus(ui, -10 - 100 * i));
         }
 
         public int Play()
@@ -54,8 +56,6 @@ namespace DinoGame
                         ui.UpdateScore(score);
                     }
                 }
-
-                Thread.Sleep(5);
             }
 
             return score;
