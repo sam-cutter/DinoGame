@@ -117,7 +117,8 @@ namespace DinoGame
 
                     Console.SetCursorPosition(left, ui.Horizon - 1 - i);
 
-                    if (c != ' ') {
+                    if (c != ' ')
+                    {
                         Console.ResetColor();
                         Console.Write(' ');
                     }

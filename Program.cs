@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 
 namespace DinoGame
 {
@@ -24,7 +20,7 @@ namespace DinoGame
 
                     Console.Write("\nEnter your name: ");
                     Console.CursorVisible = true;
-                    string name = Console.ReadLine().Trim();
+                    string name = Console.ReadLine().Trim().ToUpper();
                     Console.CursorVisible = false;
 
                     Console.WriteLine($"Good luck, {name}. Press any key to continue.");
