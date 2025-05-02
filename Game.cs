@@ -23,6 +23,8 @@ namespace DinoGame
 
         public int Play()
         {
+            Random random = new Random();
+
             ui.Skeleton();
             ui.UpdateScore(0);
             dinosaur.Display();
@@ -36,7 +38,7 @@ namespace DinoGame
 
                 foreach (Cactus cactus in cacti)
                 {
-                    if (Console.WindowWidth - cactus.DistanceFromRight < -20) cactus.DistanceFromRight = -100;
+                    if (Console.WindowWidth - cactus.DistanceFromRight < -20) cactus.DistanceFromRight = - random.Next(90, 150);
 
                     cactus.Step(score);
 
