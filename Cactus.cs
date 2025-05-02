@@ -6,6 +6,7 @@ namespace DinoGame
 {
     class Cactus : ICollidable
     {
+        private static int nextCactusNumber = 0;
         private readonly UI ui;
 
 
@@ -41,7 +42,7 @@ namespace DinoGame
 
         public Cactus(UI ui, int distanceFromRight = -10)
         {
-            displayText = DISPLAY_TEXTS[new Random().Next(DISPLAY_TEXTS.Length)];
+            displayText = DISPLAY_TEXTS[nextCactusNumber++ % DISPLAY_TEXTS.Length];
             DistanceFromRight = distanceFromRight;
             this.ui = ui;
         }

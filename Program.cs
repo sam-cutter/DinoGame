@@ -1,170 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace DinoGame
 {
-    public interface ICollidable
-    {
-        List<(int left, int top)> GenerateHitBox();
-    }
-
-
     internal class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Welcome to the dinosaur game. Press any key to continue.");
-            Console.ReadKey();
-
-            Game game = new Game();
-            game.Start();
-
-            Console.ReadKey();
-        }
-    }
-
-    class CollisionSystem
-    {
-        public static int CheckCollisions(ICollidable first, ICollidable second)
-        {
-            int collisions = 0;
-
-            foreach ((int, int) coordinate in first.GenerateHitBox())
+            while (true)
             {
-                foreach ((int, int) otherCoordinate in second.GenerateHitBox())
+                try
                 {
-                    if (coordinate == otherCoordinate)
-                    {
-                        Console.SetCursorPosition(coordinate.Item1, coordinate.Item2);
-                        Console.BackgroundColor = ConsoleColor.Red;
-                        Console.Write('*');
-                        Console.ResetColor();
+                    Console.Clear();
+                    Console.CursorVisible = false;
 
-                        collisions++;
-                    }
+                    Console.WriteLine("Welcome to the dinosaur game.");
+
+                    Leaderboard leaderboard = new Leaderboard("leaderboard.bin");
+                    leaderboard.Display();
+
+                    Console.Write("\nEnter your name: ");
+                    Console.CursorVisible = true;
+                    string name = Console.ReadLine().Trim();
+                    Console.CursorVisible = false;
+
+                    Console.WriteLine($"Good luck, {name}. Press any key to continue.");
+
+                    Console.ReadKey();
+
+                    int score = new Game().Play();
+
+                    leaderboard.Entry(name, score);
+
+                    Console.ReadKey();
+                }
+                catch
+                {
+                    Console.Clear();
+                    Console.WriteLine("Something went wrong. Press any key to continue.");
+
+                    Console.ReadKey();
                 }
             }
-
-            return collisions;
-        }
-    }
-
-    class Game
-    {
-        private int score;
-
-        private readonly Dinosaur dinosaur;
-        private readonly UI ui;
-        private List<Cactus> cacti;
-
-        public Game()
-        {
-            score = 0;
-
-            ui = new UI(3 * Console.WindowHeight / 4);
-            dinosaur = new Dinosaur(ui);
-            cacti = new List<Cactus>() { new Cactus(ui, -10), new Cactus(ui, -100), new Cactus(ui, -200), new Cactus(ui, -300), new Cactus(ui, -400), new Cactus(ui, -500) };
-        }
-
-        public void Start()
-        {
-            ui.Skeleton();
-            ui.UpdateScore(0);
-            dinosaur.Display();
-
-            Thread userInputThread = new Thread(AcceptUserInput);
-            userInputThread.Start();
-
-            while (dinosaur.Alive)
-            {
-                dinosaur.Step();
-
-                foreach (Cactus cactus in cacti)
-                {
-                    if (Console.WindowWidth - cactus.DistanceFromRight < -20) cactus.DistanceFromRight = -100;
-
-                    cactus.Step(score);
-
-                    if (CollisionSystem.CheckCollisions(dinosaur, cactus) > 0)
-                    {
-                        dinosaur.Alive = false;
-                        break;
-                    }
-
-                    if (cactus.GetRightmostLeft() == Console.WindowWidth / 4 - 1)
-                    {
-                        score++;
-                        ui.UpdateScore(score);
-                    }
-                }
-
-                Thread.Sleep(5);
-            }
-        }
-
-        private void AcceptUserInput()
-        {
-            while (dinosaur.Alive)
-            {
-                Console.ReadKey();
-
-                dinosaur.Jump();
-            }
-        }
-    }
-
-    class UI
-    {
-        public int Horizon { get; }
-
-        public UI(int horizon)
-        {
-            Horizon = horizon;
-        }
-
-        public void Skeleton()
-        {
-            Console.CursorVisible = false;
-            Console.Clear();
-
-            DisplayGround();
-            DisplayScoreLabel();
-        }
-
-        private void DisplayGround()
-        {
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-
-            for (int top = Horizon; top < Console.WindowHeight; top++)
-            {
-                for (int left = 0; left < Console.WindowWidth; left++)
-                {
-                    Console.SetCursorPosition(left, top);
-                    Console.Write('█');
-                }
-            }
-
-            Console.ResetColor();
-
-            Console.CursorTop = 0;
-        }
-
-        private void DisplayScoreLabel()
-        {
-            Console.SetCursorPosition(3, 1);
-
-            Console.Write("SCORE:");
-
-            Console.CursorTop = 0;
-        }
-
-        public void UpdateScore(int score)
-        {
-            Console.SetCursorPosition(3, 1);
-            Console.CursorLeft += "SCORE: ".Length;
-
-            Console.Write(score);
         }
     }
 }
