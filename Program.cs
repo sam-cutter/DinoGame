@@ -27,7 +27,7 @@ namespace DinoGame
 
                     Console.ReadKey();
 
-                    int score = new Game().Play();
+                    int score = new Game(name == "SAM").Play();
 
                     leaderboard.Entry(name, score);
 

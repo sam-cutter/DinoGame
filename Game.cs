@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace DinoGame
@@ -8,11 +9,14 @@ namespace DinoGame
     {
         private int score;
 
-        private readonly Dinosaur dinosaur;
         private readonly UI ui;
+        private readonly Dinosaur dinosaur;
         private readonly List<Cactus> cacti;
 
-        public Game()
+        private bool cheating;
+        private readonly bool canCheat;
+
+        public Game(bool canCheat)
         {
             score = 0;
 
@@ -21,6 +25,9 @@ namespace DinoGame
             cacti = new List<Cactus>();
 
             for (int i = 0; i < 5; i++) cacti.Add(new Cactus(ui, -10 - 100 * i));
+
+            cheating = false;
+            this.canCheat = canCheat;
         }
 
         public int Play()
@@ -40,20 +47,28 @@ namespace DinoGame
 
                 foreach (Cactus cactus in cacti)
                 {
-                    if (Console.WindowWidth - cactus.DistanceFromRight < -20) cactus.DistanceFromRight = - random.Next(90, 150);
+                    if (cheating) dinosaur.Display();
 
-                    cactus.Step(score);
+                    if (Console.WindowWidth - cactus.DistanceFromRight < -20)
+                    {
+                        cactus.DistanceFromRight = cacti.Select(c => c.DistanceFromRight).Min() - random.Next(43, 60);
 
-                    if (CollisionSystem.CheckCollisions(dinosaur, cactus) > 0)
+                        cactus.ScoreCounted = false;
+                    }
+
+                    cactus.Step(cheating ? 3 : 1);
+
+                    if (!cheating && CollisionSystem.CheckCollisions(dinosaur, cactus) > 0)
                     {
                         dinosaur.Alive = false;
                         break;
                     }
 
-                    if (cactus.GetRightmostLeft() == Console.WindowWidth / 4 - 1)
+                    if (cactus.GetRightmostLeft() < Console.WindowWidth / 4 && !cactus.ScoreCounted)
                     {
                         score++;
                         ui.UpdateScore(score);
+                        cactus.ScoreCounted = true;
                     }
                 }
             }
@@ -65,9 +80,11 @@ namespace DinoGame
         {
             while (dinosaur.Alive)
             {
-                Console.ReadKey();
-
-                dinosaur.Jump();
+                if (Console.ReadKey(true).Key == ConsoleKey.C)
+                {
+                    if (canCheat) cheating = !cheating;
+                }
+                else dinosaur.Jump();
             }
         }
     }

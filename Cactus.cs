@@ -8,7 +8,7 @@ namespace DinoGame
     {
         private static int nextCactusNumber = 0;
         private readonly UI ui;
-
+        public bool ScoreCounted { get; set; } = false;
 
         private static readonly string[][] DISPLAY_TEXTS = new string[][]
         {
@@ -57,10 +57,10 @@ namespace DinoGame
             this.ui = ui;
         }
 
-        public void Step(int score)
+        public void Step(int distance = 1)
         {
             CleanUp();
-            DistanceFromRight += 1;
+            DistanceFromRight += distance;
             Display();
         }
 
